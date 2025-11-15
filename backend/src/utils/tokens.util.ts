@@ -8,6 +8,7 @@ interface Payload {
     _id: string;
     username: undefined | string;
     email: string;
+    isAdmin: boolean;
 }
 
 export interface JwtPayloadWithData extends JwtPayload, Payload {}
@@ -17,6 +18,7 @@ export function generateAndSetJWT(res: Response, user: IUser): string | null {
         _id: user._id.toString(),
         username: user.username,
         email: user.email,
+        isAdmin: user.isAdmin,
     };
 
     const secret = process.env.JWT_SECRET;

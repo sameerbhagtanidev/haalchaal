@@ -11,7 +11,7 @@ export default function Chat() {
     return (
         <RequireOnboarded>
             <ChatProvider>
-                <SidebarProvider defaultOpen={true}>
+                <SidebarProvider defaultOpen={false}>
                     <ChatSidebar />
                     <SidebarTrigger className="hover:text-primary mt-3 ml-3 cursor-pointer" />
 

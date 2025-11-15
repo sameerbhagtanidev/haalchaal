@@ -10,11 +10,14 @@ import {
     handleLogout,
     handleGoogleLogin,
     handleGoogleCallback,
+    handleDeleteUser,
 } from "../controllers/user.controller.js";
 
 import {
     requireAuth,
+    requireOnboarded,
     requireNotOnboarded,
+    requireAdmin,
 } from "../middlewares/auth.middleware.js";
 import wrapAsync from "../utils/wrapAsync.util.js";
 
@@ -30,7 +33,15 @@ router.post(
 );
 router.post("/logout", wrapAsync(handleLogout));
 
-router.get("/google", handleGoogleLogin);
-router.get("/google/callback", handleGoogleCallback);
+router.get("/google", wrapAsync(handleGoogleLogin));
+router.get("/google/callback", wrapAsync(handleGoogleCallback));
+
+router.delete(
+    "/:userId",
+    requireAuth,
+    requireOnboarded,
+    requireAdmin,
+    wrapAsync(handleDeleteUser)
+);
 
 export default router;

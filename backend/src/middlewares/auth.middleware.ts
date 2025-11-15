@@ -65,3 +65,11 @@ export function requireNotOnboarded(
 
     return next();
 }
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+    if (!req.user!.isAdmin) {
+        throw new AppError(401, "Forbidden: Admins only");
+    }
+
+    return next();
+}

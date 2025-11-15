@@ -60,7 +60,7 @@ export default function RequestsList() {
         const sent: Relation[] = [];
 
         (requests || []).forEach((req) => {
-            if (req.fromUser!.username === user!.username) {
+            if (req.from!.username === user!.username) {
                 sent.push(req);
             } else {
                 received.push(req);
@@ -164,15 +164,12 @@ export default function RequestsList() {
                                         return (
                                             <SidebarMenuItem
                                                 key={request._id}
-                                                className="flex"
+                                                className="flex items-center gap-0.5"
                                             >
                                                 <SidebarMenuButton className="flex-1 cursor-pointer">
                                                     <FaUser />
                                                     <span className="overflow-hidden text-base text-nowrap text-ellipsis">
-                                                        {
-                                                            request.fromUser!
-                                                                .username
-                                                        }
+                                                        {request.from!.username}
                                                     </span>
                                                 </SidebarMenuButton>
 
@@ -244,15 +241,12 @@ export default function RequestsList() {
                                         return (
                                             <SidebarMenuItem
                                                 key={request._id}
-                                                className="flex"
+                                                className="flex items-center gap-0.5"
                                             >
                                                 <SidebarMenuButton className="flex-1 cursor-pointer">
                                                     <FaUser />
                                                     <span className="overflow-hidden text-base text-nowrap text-ellipsis">
-                                                        {
-                                                            request.toUser!
-                                                                .username
-                                                        }
+                                                        {request.to!.username}
                                                     </span>
                                                 </SidebarMenuButton>
 

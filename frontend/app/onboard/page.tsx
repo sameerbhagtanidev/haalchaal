@@ -6,7 +6,7 @@ import InputSection from "@/components/onboard/InputSection";
 export default function Onboard() {
     return (
         <RequireNotOnboarded>
-            <div className="shadow-primary relative flex h-[85%] w-[85%] flex-col items-center justify-evenly rounded-lg bg-white shadow-[0_0_10px_2px] dark:bg-black">
+            <div className="border-primary relative flex h-[85%] min-h-100 w-[85%] flex-col items-center justify-evenly rounded-lg border-2 bg-white dark:bg-black">
                 <div className="flex flex-col items-center justify-center gap-1 text-center">
                     <Heading />
                     <p className="text-base md:text-lg">

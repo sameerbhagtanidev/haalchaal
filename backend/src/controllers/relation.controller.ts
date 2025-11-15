@@ -1,5 +1,7 @@
 import Relation from "../models/relation.model.js";
 import User from "../models/user.model.js";
+import Message from "../models/message.model.js";
+import generateChatId from "../utils/generateChatId.util.js";
 
 import { sanitizeRelation } from "../utils/sanitize.util.js";
 import AppError from "../utils/AppError.util.js";
@@ -15,12 +17,12 @@ export async function handleGetFriends(
 
     const friends = await Relation.find({
         $or: [
-            { fromUser: user!._id, status: "accepted" },
-            { toUser: user!._id, status: "accepted" },
+            { from: user!._id, status: "accepted" },
+            { to: user!._id, status: "accepted" },
         ],
     })
-        .populate("fromUser", "_id username email")
-        .populate("toUser", "_id username email");
+        .populate("from", "_id username email isAdmin")
+        .populate("to", "_id username email isAdmin");
 
     if (friends.length === 0) {
         return res.status(200).json({
@@ -53,21 +55,26 @@ export async function handleRemoveFriend(
         $or: [
             {
                 _id: relationId,
-                fromUser: user!._id,
-                status: "accepted",
+                from: user!._id,
             },
             {
                 _id: relationId,
-                toUser: user!._id,
-                status: "accepted",
+                to: user!._id,
             },
         ],
+        status: "accepted",
     });
 
     if (!friend) {
         throw new AppError(404, "Friend not found!");
     }
 
+    const fromId = String(friend.from);
+    const toId = String(friend.to);
+
+    const chatId = generateChatId(fromId, toId);
+
+    await Message.deleteMany({ chatId });
     await friend.deleteOne();
 
     return res.status(200).json({
@@ -85,12 +92,12 @@ export async function handleGetRequests(
 
     const requests = await Relation.find({
         $or: [
-            { fromUser: user!._id, status: "pending" },
-            { toUser: user!._id, status: "pending" },
+            { from: user!._id, status: "pending" },
+            { to: user!._id, status: "pending" },
         ],
     })
-        .populate("fromUser", "_id username email")
-        .populate("toUser", "_id username email");
+        .populate("from", "_id username email isAdmin")
+        .populate("to", "_id username email isAdmin");
 
     if (requests.length === 0) {
         return res.status(200).json({
@@ -123,25 +130,25 @@ export async function handleSendRequest(
         throw new AppError(400, "You cannot send a request to yourself.");
     }
 
-    const toUser = await User.findOne({ username });
-    if (!toUser) {
+    const to = await User.findOne({ username });
+    if (!to) {
         throw new AppError(404, "User does not exist!");
     }
 
     const existingReq = await Relation.findOne({
         $or: [
-            { fromUser: user!._id, toUser: toUser._id },
-            { fromUser: toUser._id, toUser: user!._id },
+            { from: user!._id, to: to._id },
+            { from: to._id, to: user!._id },
         ],
     })
-        .populate("fromUser", "_id username email")
-        .populate("toUser", "_id username email");
+        .populate("from", "_id username email isAdmin")
+        .populate("to", "_id username email isAdmin");
 
     if (existingReq) {
         if (existingReq.status === "accepted") {
             throw new AppError(400, "You're already friends!");
         } else {
-            if (existingReq.fromUser.equals(toUser._id)) {
+            if (existingReq.from.equals(to._id)) {
                 existingReq.status = "accepted";
                 await existingReq.save();
 
@@ -159,15 +166,15 @@ export async function handleSendRequest(
     }
 
     const newReq = new Relation({
-        fromUser: user!._id,
-        toUser: toUser._id,
+        from: user!._id,
+        to: to._id,
     });
 
     await newReq.save();
 
     const populatedReq = await Relation.findById(newReq._id)
-        .populate("fromUser", "_id username email")
-        .populate("toUser", "_id username email");
+        .populate("from", "_id username email isAdmin")
+        .populate("to", "_id username email isAdmin");
 
     if (!populatedReq) {
         throw new AppError(500, "Failed to send request");
@@ -192,7 +199,7 @@ export async function handleDeleteRequest(
 
     const request = await Relation.findOne({
         _id: relationId,
-        fromUser: user!._id,
+        from: user!._id,
         status: "pending",
     });
 
@@ -219,11 +226,11 @@ export async function handleResolveRequest(
 
     const request = await Relation.findOne({
         _id: relationId,
-        toUser: user!._id,
+        to: user!._id,
         status: "pending",
     })
-        .populate("fromUser", "_id username email")
-        .populate("toUser", "_id username email");
+        .populate("from", "_id username email isAdmin")
+        .populate("to", "_id username email isAdmin");
 
     if (!request) {
         throw new AppError(404, "Request not found!");
@@ -236,7 +243,7 @@ export async function handleResolveRequest(
             success: true,
             message: "Friend request rejected",
             data: {
-                request,
+                request: sanitizeRelation(request),
             },
         });
     }
@@ -248,7 +255,7 @@ export async function handleResolveRequest(
         success: true,
         message: "Friend request accepted",
         data: {
-            request,
+            request: sanitizeRelation(request),
         },
     });
 }

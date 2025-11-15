@@ -2,7 +2,7 @@
     "name": "backend",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "dist/app.js",
     "type": "module",
     "scripts": {
         "prebuild": "rimraf dist",
@@ -15,6 +15,7 @@
     "license": "ISC",
     "dependencies": {
         "bcrypt": "^6.0.0",
+        "cookie": "^1.0.2",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.5",
         "dotenv": "^17.2.3",
@@ -24,6 +25,7 @@
         "mongoose": "^8.19.3",
         "nanoid": "^5.1.6",
         "rimraf": "^6.1.0",
+        "socket.io": "^4.8.1",
         "typescript": "^5.9.3"
     },
     "devDependencies": {

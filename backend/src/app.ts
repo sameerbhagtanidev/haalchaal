@@ -3,6 +3,7 @@ import "dotenv/config";
 
 // core requires
 import express from "express";
+import initWsServer from "./ws/wsServer.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -44,6 +45,9 @@ app.use("/api/users", usersRouter);
 import relationsRouter from "./routes/relations.route.js";
 app.use("/api/relations", relationsRouter);
 
+import messagesRouter from "./routes/messages.route.js";
+app.use("/api/messages", messagesRouter);
+
 app.get("/api/ping", (req, res, next) => {
     return res.status(200).json({
         success: true,
@@ -61,8 +65,10 @@ app.all("*splat", (req, res, next) => {
 import appErrorHandler from "./utils/appErrorHandler.util.js";
 app.use(appErrorHandler);
 
-// start server
+// http server
 const PORT = Number(process.env.PORT) || 5000;
-app.listen(PORT, "0.0.0.0", () => {
+const httpServer = app.listen(PORT, "0.0.0.0", () => {
     console.log(`✅ Server started at PORT : ${PORT}`);
 });
+
+initWsServer(httpServer);

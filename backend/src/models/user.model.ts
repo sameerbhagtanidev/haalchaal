@@ -7,45 +7,46 @@ export interface IUser extends Document {
     email: string;
     googleId?: string;
 
+    isAdmin: boolean;
+
     loginToken?: string;
     loginTokenExpiresAt?: Date;
-
-    createdAt: Date;
-    updatedAt: Date;
 
     compareLoginToken(loginToken: string): Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser>(
-    {
-        username: {
-            type: String,
-            trim: true,
-            lowercase: true,
-            sparse: true,
-            unique: true,
-            index: true,
-            min: 3,
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-            lowercase: true,
-            index: true,
-        },
-        googleId: {
-            type: String,
-            unique: true,
-            sparse: true,
-        },
-
-        loginToken: String,
-        loginTokenExpiresAt: Date,
+const userSchema = new Schema<IUser>({
+    username: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        sparse: true,
+        unique: true,
+        index: true,
+        min: 3,
     },
-    { timestamps: true }
-);
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true,
+        index: true,
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
+
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
+
+    loginToken: String,
+    loginTokenExpiresAt: Date,
+});
 
 userSchema.pre<IUser>("save", async function (next) {
     if (!this.loginToken || !this.isModified("loginToken")) return next();
@@ -67,5 +68,4 @@ userSchema.method(
 );
 
 const User = model<IUser>("User", userSchema);
-
 export default User;

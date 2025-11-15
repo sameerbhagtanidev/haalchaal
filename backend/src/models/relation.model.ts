@@ -3,39 +3,32 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IRelation extends Document {
     _id: Types.ObjectId;
 
-    fromUser: Types.ObjectId;
-    toUser: Types.ObjectId;
+    from: Types.ObjectId;
+    to: Types.ObjectId;
     status: "pending" | "accepted";
-
-    createdAt: Date;
-    updatedAt: Date;
 }
 
-const relationSchema = new Schema<IRelation>(
-    {
-        fromUser: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
-        toUser: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
-        status: {
-            type: String,
-            enum: ["pending", "accepted"],
-            default: "pending",
-        },
+const relationSchema = new Schema<IRelation>({
+    from: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        index: true,
     },
-    { timestamps: true }
-);
+    to: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        index: true,
+    },
+    status: {
+        type: String,
+        enum: ["pending", "accepted"],
+        default: "pending",
+    },
+});
+
+relationSchema.index({ from: 1, to: 1 }, { unique: true });
 
 const Relation = model<IRelation>("Relation", relationSchema);
-
-relationSchema.index({ fromUser: 1, toUser: 1 }, { unique: true });
-
 export default Relation;

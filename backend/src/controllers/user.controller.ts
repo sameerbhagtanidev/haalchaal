@@ -1,4 +1,6 @@
 import User from "../models/user.model.js";
+import Relation from "../models/relation.model.js";
+import Message from "../models/message.model.js";
 
 import { generateAndSetJWT, generateLoginToken } from "../utils/tokens.util.js";
 import { sanitizeUser } from "../utils/sanitize.util.js";
@@ -7,7 +9,6 @@ import { nanoid } from "nanoid";
 import { oauth2Client } from "../config/googleAuth.config.js";
 
 import type { Request, Response, NextFunction } from "express";
-import { resolve } from "path";
 
 export async function handleCheckUsername(
     req: Request,
@@ -285,4 +286,37 @@ export async function handleGoogleCallback(
             `${process.env.CLIENT_URL!}/error?msg=Google Login Failed`
         );
     }
+}
+
+export async function handleDeleteUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    const userId = req.params.userId;
+
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+        throw new AppError(404, "User not found");
+    }
+
+    const relResult = await Relation.deleteMany({
+        $or: [{ from: userId }, { to: userId }],
+    });
+
+    const msgResult = await Message.deleteMany({
+        $or: [{ from: userId }, { to: userId }],
+    });
+
+    const userResult = await User.deleteOne({ _id: userId });
+
+    return res.status(200).json({
+        success: true,
+        message: "User and related data deleted successfully.",
+        data: {
+            userDeleted: userResult.deletedCount === 1,
+            relationsDeleted: relResult.deletedCount ?? 0,
+            messagesDeleted: msgResult.deletedCount ?? 0,
+        },
+    });
 }
