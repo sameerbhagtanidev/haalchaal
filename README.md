@@ -1,4 +1,4 @@
-# **HaalChaal**
+# **HaalChaal** 👋
 
 ### **_Check-in & Connect with Friends_**
 
@@ -20,8 +20,8 @@ Ask your friends about their _“HaalChaal”_ (well-being) in real time!
 -   One-to-one instant messaging
 -   Typing indicator for real-time feedback
 -   Seen indicator when messages are viewed
--   Optimistic UI — messages appear instantly on sender’s screen
--   Paginated chat history — older chats load in chunks of 20 while scrolling up
+-   Optimistic UI - messages appear instantly on sender’s screen
+-   Paginated chat history - older chats load in chunks of 20 while scrolling up
 
 ### 🔐 Authentication
 
