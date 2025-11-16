@@ -33,6 +33,7 @@ Ask your friends about their _“HaalChaal”_ (well-being) in real time!
 
 -   Clean, minimal, and fully responsive design
 -   Built using **Tailwind CSS** & **shadcn/ui**
+-   Built-in Dark Mode & Light Mode with seamless theme switching
 
 ---
 
