@@ -120,6 +120,7 @@ export default function ChatProvider({ children }: ChatProviderProps) {
                     }
                 }
 
+                if (!friendUsername) return;
                 toast.info(`New message from ${friendUsername}!`);
             }
         });

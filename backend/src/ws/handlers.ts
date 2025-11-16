@@ -31,6 +31,7 @@ export function connectionHandler(io: Server, socket: Socket) {
         ) => {
             try {
                 const { message, toId } = data;
+                const fromId = socket.data.userId as string;
 
                 const newMsg = await saveMessage(
                     socket.data.userId,
@@ -39,9 +40,20 @@ export function connectionHandler(io: Server, socket: Socket) {
                 );
                 const sanitized = sanitizeMessage(newMsg);
 
-                const recipientSockets = onlineUsers.get(toId);
-                if (recipientSockets) {
-                    for (const sid of recipientSockets) {
+                const recipientSockets =
+                    onlineUsers.get(toId) ?? new Set<string>();
+                const senderSockets =
+                    onlineUsers.get(fromId) ?? new Set<string>();
+
+                const targets = new Set<string>([
+                    ...recipientSockets,
+                    ...senderSockets,
+                ]);
+
+                targets.delete(socket.id);
+
+                if (targets) {
+                    for (const sid of targets) {
                         io.to(sid).emit("receive_message", sanitized);
                     }
                 }
