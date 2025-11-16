@@ -5,7 +5,13 @@ import Relation from "../models/relation.model.js";
 import AppError from "../utils/AppError.util.js";
 import generateChatId from "../utils/generateChatId.util.js";
 
+import { validateData, validateObjectIds } from "../utils/validate.util.js";
+import * as schemas from "../validation/message.schema.js";
+
 export async function saveMessage(fromId: string, toId: string, text: string) {
+    validateObjectIds([fromId, toId]);
+    validateData(schemas.saveMessageSchema, { text });
+
     if (fromId === toId) {
         throw new AppError(400, "You cannot send a message to yourself");
     }
@@ -39,6 +45,8 @@ export async function saveMessage(fromId: string, toId: string, text: string) {
 }
 
 export async function markRead(userId: string, msgId: string) {
+    validateObjectIds([userId, msgId]);
+
     const targetMsg = await Message.findById(msgId);
     if (!targetMsg) throw new AppError(404, "Message not found");
 

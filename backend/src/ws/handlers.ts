@@ -1,11 +1,12 @@
 import { onlineUsers } from "./wsServer.js";
 import { saveMessage, markRead } from "../services/message.service.js";
 
+import { sanitizeMessage } from "../utils/sanitize.util.js";
+import wsErrorHandler from "../utils/wsErrorHandler.js";
 import type { Socket } from "socket.io";
 import type { Server } from "socket.io";
-import { sanitizeMessage } from "../utils/sanitize.util.js";
 
-export async function connectionHandler(io: Server, socket: Socket) {
+export function connectionHandler(io: Server, socket: Socket) {
     const userId = socket.data.userId;
 
     if (!onlineUsers.has(userId)) {
@@ -22,40 +23,75 @@ export async function connectionHandler(io: Server, socket: Socket) {
         userSockets.delete(socket.id);
     });
 
-    socket.on("send_message", async (data) => {
-        const { message, toId } = data;
-        const newMsg = await saveMessage(socket.data.userId, toId, message);
+    socket.on(
+        "send_message",
+        async (
+            data: { message: string; toId: string },
+            ack?: (res: any) => void
+        ) => {
+            try {
+                const { message, toId } = data;
 
-        const recipientSockets = onlineUsers.get(toId);
+                const newMsg = await saveMessage(
+                    socket.data.userId,
+                    toId,
+                    message
+                );
+                const sanitized = sanitizeMessage(newMsg);
 
-        socket.emit("receive_message", sanitizeMessage(newMsg));
-        if (recipientSockets) {
-            for (const sid of recipientSockets) {
-                io.to(sid).emit("receive_message", sanitizeMessage(newMsg));
+                const recipientSockets = onlineUsers.get(toId);
+                if (recipientSockets) {
+                    for (const sid of recipientSockets) {
+                        io.to(sid).emit("receive_message", sanitized);
+                    }
+                }
+
+                ack?.({
+                    success: true,
+                    message: "Message sent successfully.",
+                    data: { message: sanitized },
+                });
+            } catch (err) {
+                wsErrorHandler(err, ack);
             }
+        }
+    );
+
+    socket.on("send_typing", (toId: string, ack?: (res: any) => void) => {
+        try {
+            const recipientSockets = onlineUsers.get(toId);
+            const fromId = socket.data.userId;
+
+            if (recipientSockets) {
+                for (const sid of recipientSockets) {
+                    io.to(sid).emit("receive_typing", fromId);
+                }
+            }
+        } catch (err) {
+            wsErrorHandler(err, ack);
         }
     });
 
-    socket.on("send_typing", (toId) => {
-        const recipientSockets = onlineUsers.get(toId);
-        const fromId = socket.data.userId;
+    socket.on(
+        "send_mark_read",
+        async (msgId: string, ack?: (res: any) => void) => {
+            try {
+                const targetMsg = await markRead(socket.data.userId, msgId);
+                const recipientSockets = onlineUsers.get(
+                    String(targetMsg.from)
+                );
 
-        if (recipientSockets) {
-            for (const sid of recipientSockets) {
-                io.to(sid).emit("receive_typing", fromId);
+                if (recipientSockets) {
+                    for (const sid of recipientSockets) {
+                        io.to(sid).emit(
+                            "receive_mark_read",
+                            String(targetMsg._id)
+                        );
+                    }
+                }
+            } catch (err) {
+                wsErrorHandler(err, ack);
             }
         }
-    });
-
-    socket.on("send_mark_read", async (msgId) => {
-        const newMsg = await markRead(socket.data.userId, msgId);
-
-        const recipientSockets = onlineUsers.get(String(newMsg.from));
-
-        if (recipientSockets) {
-            for (const sid of recipientSockets) {
-                io.to(sid).emit("receive_mark_read", String(newMsg._id));
-            }
-        }
-    });
+    );
 }

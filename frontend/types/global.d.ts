@@ -21,4 +21,6 @@ type Message = {
     text: string;
     seen: boolean;
     createdAt: Date;
+
+    pending?: boolean;
 };

@@ -170,7 +170,7 @@ export default function ChatProvider({ children }: ChatProviderProps) {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [user, activeChat, isTyping, activeChatConvo, friends]);
+    }, [user, activeChat, friends]);
 
     return (
         <ChatContext.Provider

@@ -9,6 +9,8 @@ import AppError from "../utils/AppError.util.js";
 import generateChatId from "../utils/generateChatId.util.js";
 import { sanitizeMessage } from "../utils/sanitize.util.js";
 
+import { validateObjectIds } from "../utils/validate.util.js";
+
 export async function handleSendMessage(
     req: Request,
     res: Response,
@@ -33,8 +35,14 @@ export async function handleGetConversation(
     res: Response,
     next: NextFunction
 ) {
-    const userId = String(req.user!._id);
     const otherId = req.params.otherId;
+    validateObjectIds(otherId);
+
+    const userId = String(req.user!._id);
+
+    if (userId === otherId) {
+        throw new AppError(400, "Invalid ID of other user");
+    }
 
     const otherUser = await User.findById(otherId);
     if (!otherUser) {
@@ -54,13 +62,33 @@ export async function handleGetConversation(
 
     const chatId = generateChatId(userId, otherId);
 
-    const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
+    const limit = Number(req.query.limit) || 20;
+    const cursor = req.query.cursor as string | undefined;
+
+    const filter: Record<string, unknown> = { chatId };
+
+    if (cursor) {
+        validateObjectIds(cursor);
+        const cursorMsg = await Message.findById(cursor);
+        if (!cursorMsg) {
+            throw new AppError(400, "Invalid cursor message id");
+        }
+
+        filter.createdAt = { $lt: cursorMsg.createdAt };
+    }
+
+    const messages = await Message.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(limit);
+
+    const sanitized = messages.map(sanitizeMessage);
 
     return res.status(200).json({
         success: true,
         message: "Messages fetched successfully.",
         data: {
-            messages: messages.map(sanitizeMessage),
+            messages: sanitized.reverse(),
+            hasMore: messages.length === limit,
         },
     });
 }
@@ -105,7 +133,7 @@ export async function handleMarkRead(
 
     const targetMsg = await markRead(String(req.user!._id), msgId);
 
-    return res.json({
+    return res.status(200).json({
         success: true,
         message: "Message marked as read successfully.",
         data: {

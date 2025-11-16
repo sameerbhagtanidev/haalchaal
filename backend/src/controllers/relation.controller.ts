@@ -5,6 +5,8 @@ import generateChatId from "../utils/generateChatId.util.js";
 
 import { sanitizeRelation } from "../utils/sanitize.util.js";
 import AppError from "../utils/AppError.util.js";
+import { validateData, validateObjectIds } from "../utils/validate.util.js";
+import * as schemas from "../validation/relation.schema.js";
 
 import type { Request, Response, NextFunction } from "express";
 
@@ -49,6 +51,8 @@ export async function handleRemoveFriend(
     next: NextFunction
 ) {
     const relationId = req.params.relationId;
+    validateObjectIds(relationId);
+
     const user = req.user;
 
     const friend = await Relation.findOne({
@@ -123,7 +127,8 @@ export async function handleSendRequest(
     res: Response,
     next: NextFunction
 ) {
-    const { username } = req.body;
+    const validated = validateData(schemas.sendRequestSchema, req.body);
+    const { username } = validated;
     const user = req.user;
 
     if (user!.username === username) {
@@ -195,6 +200,7 @@ export async function handleDeleteRequest(
     next: NextFunction
 ) {
     const relationId = req.params.relationId;
+    validateObjectIds(relationId);
     const user = req.user;
 
     const request = await Relation.findOne({
@@ -221,7 +227,10 @@ export async function handleResolveRequest(
     next: NextFunction
 ) {
     const relationId = req.params.relationId;
-    const { action } = req.body;
+    validateObjectIds(relationId);
+
+    const validated = validateData(schemas.resolveRequestSchema, req.body);
+    const { action } = validated;
     const user = req.user;
 
     const request = await Relation.findOne({

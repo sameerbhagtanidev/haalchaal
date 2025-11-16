@@ -10,16 +10,17 @@ import { oauth2Client } from "../config/googleAuth.config.js";
 
 import type { Request, Response, NextFunction } from "express";
 
+import * as schemas from "../validation/user.schema.js";
+import { validateData, validateObjectIds } from "../utils/validate.util.js";
+import { sendLoginEmail } from "../utils/mails.util.js";
+
 export async function handleCheckUsername(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
-    const { username } = req.query;
-
-    if (!username) {
-        throw new AppError(400, "Username is required");
-    }
+    const validated = validateData(schemas.checkUsernameSchema, req.query);
+    const { username } = validated;
 
     const existingUser = await User.findOne({ username });
 
@@ -68,13 +69,18 @@ export async function handleSendToken(
     res: Response,
     next: NextFunction
 ) {
-    const { email }: { email: string } = req.body;
+    const validated = validateData(schemas.sendTokenSchema, req.body);
+    const { email }: { email: string } = validated;
 
     const existingUser = await User.findOne({ email });
 
     const loginToken = generateLoginToken();
-    // await sendLoginEmail(email, loginToken);
-    console.log(loginToken);
+
+    if (process.env.SEND_MAILS === "true") {
+        await sendLoginEmail(email, loginToken);
+    } else {
+        console.log(`${email} : ${loginToken}`);
+    }
 
     if (existingUser) {
         existingUser.loginToken = loginToken;
@@ -114,8 +120,9 @@ export async function handleVerifyToken(
     res: Response,
     next: NextFunction
 ) {
+    const validated = validateData(schemas.verifyTokenSchema, req.body);
     const { email, loginToken }: { email: string; loginToken: string } =
-        req.body;
+        validated;
 
     const user = await User.findOne({ email });
 
@@ -157,7 +164,8 @@ export async function handleOnboard(
     res: Response,
     next: NextFunction
 ) {
-    const { username } = req.body;
+    const validated = validateData(schemas.onboardSchema, req.body);
+    const { username } = validated;
     const email = req.user?.email;
 
     const usernameExists = await User.findOne({ username });
@@ -232,8 +240,6 @@ export async function handleGoogleCallback(
     const storedState = req.cookies["haalchaal-oauth-state"];
     res.clearCookie("haalchaal-oauth-state");
 
-    console.log(storedState);
-
     if (state !== storedState || error) {
         console.error(`Google Auth error : ${error}`);
         return res.redirect(
@@ -294,6 +300,7 @@ export async function handleDeleteUser(
     next: NextFunction
 ) {
     const userId = req.params.userId;
+    validateObjectIds(userId);
 
     const existingUser = await User.findById(userId);
     if (!existingUser) {

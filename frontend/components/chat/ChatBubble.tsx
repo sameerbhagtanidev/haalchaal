@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import clsx from "clsx";
-import { FaCheckDouble } from "react-icons/fa6";
+import { FaCheckDouble, FaCheck } from "react-icons/fa6";
 
 type ChatBubbleProps = {
     children: ReactNode;
@@ -8,6 +8,7 @@ type ChatBubbleProps = {
     seen?: boolean;
     sent?: boolean;
     skeleton?: boolean;
+    pending?: boolean;
 };
 
 export default function ChatBubble({
@@ -16,6 +17,7 @@ export default function ChatBubble({
     seen = false,
     sent = false,
     skeleton = false,
+    pending = false,
 }: ChatBubbleProps) {
     return (
         <div
@@ -33,11 +35,14 @@ export default function ChatBubble({
                     <span>{children}</span>
                     <div className="flex items-center justify-center gap-0.5 self-end text-xs">
                         <span>{time}</span>
-                        <span>{}</span>
-                        {sent && !seen && <FaCheckDouble />}
-                        {sent && seen && (
-                            <FaCheckDouble className="text-primary" />
-                        )}
+                        <span>
+                            {pending && sent && <FaCheck />}
+                            {!pending && sent && (
+                                <FaCheckDouble
+                                    className={clsx({ "text-primary": seen })}
+                                />
+                            )}
+                        </span>
                     </div>
                 </>
             )}
