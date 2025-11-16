@@ -3,6 +3,8 @@ import AppError from "./AppError.util.js";
 import { LOGIN_TEMPLATE } from "./mailTemplates.util.js";
 
 export async function sendLoginEmail(email: string, loginToken: string) {
+    console.log("preparing...");
+
     const mailOptions = {
         from: `"HaalChaal" <${process.env.TRANSACTIONAL_DOMAIN}>`,
         to: email,
