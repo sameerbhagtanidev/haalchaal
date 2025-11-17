@@ -8,6 +8,7 @@ import {
     SidebarMenuItem,
     SidebarFooter,
     SidebarHeader,
+    useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import useAuth from "@/hooks/useAuth";
 import {
@@ -34,6 +36,9 @@ import RequestsList from "./RequestsList";
 export default function ChatSidebar() {
     const { user, logout } = useAuth();
     const [header, setHeader] = useState("friends");
+
+    const { setOpenMobile, setOpen } = useSidebar();
+    const router = useRouter();
 
     async function handleLogout() {
         try {
@@ -109,7 +114,16 @@ export default function ChatSidebar() {
                                 className="w-[var(--radix-popper-anchor-width)]"
                             >
                                 <DropdownMenuItem asChild className="text-base">
-                                    <Link href="/" className="cursor-pointer">
+                                    <Link
+                                        href="/"
+                                        className="cursor-pointer"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setOpen(false);
+                                            setOpenMobile(false);
+                                            router.push("/");
+                                        }}
+                                    >
                                         Home
                                     </Link>
                                 </DropdownMenuItem>
@@ -117,8 +131,13 @@ export default function ChatSidebar() {
                                 <DropdownMenuItem asChild className="text-base">
                                     <button
                                         type="button"
-                                        className="w-full cursor-pointer"
-                                        onClick={handleLogout}
+                                        className="w-full cursor-pointer text-start"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setOpen(false);
+                                            setOpenMobile(false);
+                                            handleLogout();
+                                        }}
                                     >
                                         Logout
                                     </button>

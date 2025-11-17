@@ -43,7 +43,12 @@ export default function ChatWindow() {
         if (!message || !message.trim()) return;
 
         if (activeChat && socketRef.current && connected) {
-            const tempId = crypto.randomUUID();
+            const tempId =
+                typeof crypto !== "undefined" &&
+                typeof crypto.randomUUID === "function"
+                    ? crypto.randomUUID()
+                    : `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+
             const toId =
                 activeChat.from!._id === user!._id
                     ? activeChat?.to!._id
@@ -136,6 +141,15 @@ export default function ChatWindow() {
                             rows={1}
                             onInput={handleInput}
                             onKeyDown={(e) => {
+                                if (
+                                    typeof window !== "undefined" &&
+                                    /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+                                        navigator.userAgent,
+                                    )
+                                ) {
+                                    return;
+                                }
+
                                 if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
 

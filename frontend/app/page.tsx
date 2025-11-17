@@ -23,7 +23,7 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col items-center justify-center gap-5 md:flex-row">
-                <Button className="w-full text-2xl md:w-8/10">
+                <Button asChild className="w-full text-2xl md:w-8/10">
                     <Link
                         href="/login"
                         className="flex w-full items-center justify-center gap-3"
@@ -33,7 +33,7 @@ export default function Home() {
                     </Link>
                 </Button>
 
-                <Button className="w-full text-2xl md:w-8/10">
+                <Button asChild className="w-full text-2xl md:w-8/10">
                     <Link
                         href="https://github.com/sameerbhagtanidev/haalchaal"
                         className="flex w-full items-center justify-center gap-3"
