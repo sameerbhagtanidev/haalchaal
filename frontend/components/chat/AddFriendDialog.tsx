@@ -36,6 +36,7 @@ export default function AddFriendDialog() {
         handleSubmit,
         formState: { errors, isSubmitting },
         reset,
+        setValue,
     } = useForm({
         mode: "onTouched",
         resolver: zodResolver(addFriendSchema),
@@ -116,6 +117,12 @@ export default function AddFriendDialog() {
                             autoFocus
                             className="text-lg"
                             {...register("username")}
+                            onChange={(e) => {
+                                const lower = e.target.value.toLowerCase();
+                                setValue("username", lower, {
+                                    shouldValidate: true,
+                                });
+                            }}
                         />
 
                         {errors.username && (
